@@ -157,8 +157,8 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SECRET_KEY = "\2\1thisismyscretkey\1\2\\e\\y\\y\\h"
 
 # The SQLAlchemy connection string.
-SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(DATA_DIR, "superset.db")
-# SQLALCHEMY_DATABASE_URI = 'mysql://myapp@localhost/myapp'
+#SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(DATA_DIR, "superset.db")
+SQLALCHEMY_DATABASE_URI = 'mysql://root:pass@127.0.0.1:3306/superset'
 # SQLALCHEMY_DATABASE_URI = 'postgresql://root:password@localhost/myapp'
 
 # In order to hook up a custom password store for all SQLACHEMY connections
@@ -292,6 +292,13 @@ AUTH_TYPE = AUTH_DB
 # dashboards. Explicit grant on specific datasets is still required.
 PUBLIC_ROLE_LIKE: Optional[str] = None
 
+# ---------------------------------------------------
+# Contract config
+# ---------------------------------------------------
+
+DU_ABI = '[{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"inactiveMemberCount","inputs":[]}, {"type":"function","stateMutability":"view","outputs":[{"type":"uint8","name":"status","internalType":"enum DataUnionSidechain.ActiveStatus"},{"type":"uint256","name":"earningsBeforeLastJoin","internalType":"uint256"},{"type":"uint256","name":"lmeAtJoin","internalType":"uint256"},{"type":"uint256","name":"withdrawnEarnings","internalType":"uint256"}],"name":"memberData","inputs":[{"type":"address","name":"","internalType":"address"}]}]'
+DU_ADDRESS = "0x15287E573007d5FbD65D87ed46c62Cf4C71Dd66d"
+XDAI_JSON_RPC_URL = "https://rpc.xdaichain.com/"
 # ---------------------------------------------------
 # Babel config for translations
 # ---------------------------------------------------

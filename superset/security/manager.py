@@ -18,6 +18,13 @@
 """A set of constants and methods to manage permissions and security"""
 import logging
 import re
+import math
+import random
+import json
+import datetime
+from .bi_models import BIUser
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from collections import defaultdict
 from typing import (
     Any,
@@ -64,6 +71,9 @@ from superset.constants import RouteMethod
 from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.exceptions import SupersetSecurityException
 from superset.utils.core import DatasourceName, RowLevelSecurityFilterType
+from web3.auto import w3
+from web3 import Web3
+from eth_account.messages import defunct_hash_message
 
 if TYPE_CHECKING:
     from superset.common.query_context import QueryContext
@@ -124,6 +134,7 @@ RoleModelView.related_views = []
 class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
     SecurityManager
 ):
+    user_model = BIUser
     userstatschartview = None
     READ_ONLY_MODEL_VIEWS = {"Database", "DruidClusterModelView", "DynamicPlugin"}
 
@@ -220,6 +231,20 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         "all_database_access",
         "all_query_access",
     )
+
+    def __init__(self, appbuilder):
+        """
+            SupersetSecurityManager contructor
+            param appbuilder:
+                Superset AppBuilder main object
+        """
+        super(SupersetSecurityManager, self).__init__(appbuilder)
+        provider = Web3(Web3.HTTPProvider(current_app.config["XDAI_JSON_RPC_URL"]))
+        abi = json.loads(current_app.config["DU_ABI"])
+        address = Web3.toChecksumAddress(current_app.config["DU_ADDRESS"])
+        self.contract = provider.eth.contract(address=address, abi=abi)
+        if provider.isConnected():
+            logger.info('dataunion provider is connected')
 
     def get_schema_perm(  # pylint: disable=no-self-use
         self, database: Union["Database", str], schema: Optional[str] = None
@@ -1209,3 +1234,100 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
 
         exists = db.session.query(query.exists()).scalar()
         return exists
+
+    def update_user_auth_stat(self, user, success=True):
+        """
+        Update user authentication stats upon successful/unsuccessful
+        authentication attempts.
+
+        :param user:
+            The identified (but possibly not successfully authenticated) user
+            model
+        :param success:
+        :type success: bool or None
+            Defaults to true, if true increments login_count, updates
+            last_login, nonce, and resets fail_login_count to 0, if false increments
+            fail_login_count on user model.
+        """
+        if not user.login_count:
+            user.login_count = 0
+        if not user.fail_login_count:
+            user.fail_login_count = 0
+        if success:
+            user.login_count += 1
+            user.last_login = datetime.datetime.now()
+            user.nonce = math.floor(random.random() * 1000000)
+            user.fail_login_count = 0
+        else:
+            user.fail_login_count += 1
+        self.update_user(user)
+    
+    def auth_user_db(self, username, password):
+        """
+        Method for authenticating user, auth db style
+        :param username:
+            The username or registered email address
+        :param password:
+            The password or signature for web3,
+            will be tested against hashed password on db
+        """
+        if username is None or username == "":
+            return None
+        first_user = self.get_first_user()
+        user = self.find_user(username=username)
+        if user is None or (not user.is_active):
+            # Balance failure and success
+            check_password_hash(
+                "pbkdf2:sha256:150000$Z3t6fmj2$22da622d94a1f8118"
+                "c0976a03d2f18f680bfff877c9a965db9eedc51bc0be87c",
+                "password",
+            )
+            logger.info("login failed %s", username)
+            # Balance failure and success
+            self.noop_user_update(first_user)
+            return None
+        elif check_password_hash(user.password, password):
+            self.update_user_auth_stat(user, True)
+            return user
+        else:
+            msg = "I am signing my one-time nonce: " + str(user.nonce)
+            logger.info("message %s", msg)
+            msg_hash = defunct_hash_message(text=msg)
+            addr = w3.eth.account.recoverHash(message_hash=msg_hash, signature=password)
+            logger.info("address %s", addr)
+            if addr.lower() == username.lower():
+                self.update_user_auth_stat(user, True)
+                return user
+            else:
+                logger.info("login failed %s", username)
+                self.noop_user_update(first_user)
+                return None
+
+    def find_user_contract_sync(self, username):
+        """
+        Method to get user from contract and sync with database 
+        :param username:
+            The username or address
+        """
+        if username is None or username == "":
+            return None
+        address = Web3.toChecksumAddress(username)
+        memberInfo = self.contract.functions.memberData(address).call()
+        logger.info(memberInfo)
+        if memberInfo is None:
+            return None
+        user = self.find_user(username=username)
+        if user is None:
+            user = self.add_user(
+            username=username,
+            first_name=username,
+            last_name="-",
+            email=username + "@email.notfound",
+            role=self.find_role("Gamma"), # TODO use contract roles
+        )
+        user.nonce = math.floor(random.random() * 1000000)
+        user.active = memberInfo[0] == 1
+        self.update_user(user)
+        if not user.is_active:
+            return None
+        return user

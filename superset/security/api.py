@@ -16,7 +16,7 @@
 # under the License.
 import logging
 
-from flask import Response
+from flask import Response, request
 from flask_appbuilder import expose
 from flask_appbuilder.api import BaseApi, safe
 from flask_appbuilder.security.decorators import permission_name, protect
@@ -60,3 +60,32 @@ class SecurityRestApi(BaseApi):
               $ref: '#/components/responses/500'
         """
         return self.response(200, result=generate_csrf())
+
+    @expose("/user/<pk>", methods=["GET"])
+    @safe
+    def user(self, pk) -> Response:
+        """
+        Return the user
+        ---
+        get:
+          description: >-
+            Fetch the user
+          responses:
+            200:
+              description: Result contains the user
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                        result:
+                          user: object
+            401:
+              $ref: '#/components/responses/401'
+            500:
+              $ref: '#/components/responses/500'
+        """
+        user = self.appbuilder.sm.find_user_contract_sync(username=pk)
+        if user is None:
+          return self.response_404()
+        return self.response(200, result={"username": user.username, "nonce": user.nonce})
