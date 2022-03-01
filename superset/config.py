@@ -186,7 +186,7 @@ SQLALCHEMY_ENCRYPTED_FIELD_TYPE_ADAPTER = (  # pylint: disable=invalid-name
 QUERY_SEARCH_LIMIT = 1000
 
 # Flask-WTF flag for CSRF
-WTF_CSRF_ENABLED = True
+WTF_CSRF_ENABLED = False
 
 # Add endpoints that need to be exempt from CSRF protection
 WTF_CSRF_EXEMPT_LIST = ["superset.views.core.log", "superset.charts.api.data"]
@@ -271,10 +271,10 @@ AUTH_TYPE = AUTH_DB
 # AUTH_ROLE_PUBLIC = 'Public'
 
 # Will allow user self registration
-# AUTH_USER_REGISTRATION = True
+AUTH_USER_REGISTRATION = True
 
 # The default user self registration role
-# AUTH_USER_REGISTRATION_ROLE = "Public"
+AUTH_USER_REGISTRATION_ROLE = "Gamma"
 
 # When using LDAP Auth, setup the LDAP server
 # AUTH_LDAP_SERVER = "ldap://ldapserver.new"
@@ -914,13 +914,22 @@ ENABLE_ACCESS_REQUEST = False
 
 # smtp server configuration
 EMAIL_NOTIFICATIONS = False  # all the emails are sent using dryrun
-SMTP_HOST = "localhost"
+SMTP_HOST = "smtp.mailgun.org"
 SMTP_STARTTLS = True
 SMTP_SSL = False
-SMTP_USER = "superset"
-SMTP_PORT = 25
-SMTP_PASSWORD = "superset"
-SMTP_MAIL_FROM = "superset@superset.com"
+SMTP_USER = "postmaster@sandbox15b913a406a842b7a1d472653f844470.mailgun.org"
+SMTP_PORT = 587
+SMTP_PASSWORD = "79f69fb2cbade591522fb278435a7a2f-b2f5ed24-433253e6"
+SMTP_MAIL_FROM = "support@swashapp.io"
+
+MAIL_SERVER = 'smtp.mailgun.org'
+MAIL_USE_TLS = True
+MAIL_USERNAME = 'postmaster@sandbox15b913a406a842b7a1d472653f844470.mailgun.org'
+MAIL_PASSWORD = '79f69fb2cbade591522fb278435a7a2f-b2f5ed24-433253e6'
+MAIL_DEFAULT_SENDER = 'support@swashapp.io'
+
+RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
 
 ENABLE_CHUNK_ENCODING = False
 

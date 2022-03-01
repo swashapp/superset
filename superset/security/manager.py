@@ -72,7 +72,7 @@ from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.exceptions import SupersetSecurityException
 from superset.utils.core import DatasourceName, RowLevelSecurityFilterType
 from web3.auto import w3
-from web3 import Web3
+# from web3 import Web3
 from eth_account.messages import defunct_hash_message
 
 if TYPE_CHECKING:
@@ -232,19 +232,19 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         "all_query_access",
     )
 
-    def __init__(self, appbuilder):
-        """
-            SupersetSecurityManager contructor
-            param appbuilder:
-                Superset AppBuilder main object
-        """
-        super(SupersetSecurityManager, self).__init__(appbuilder)
-        provider = Web3(Web3.HTTPProvider(current_app.config["XDAI_JSON_RPC_URL"]))
-        abi = json.loads(current_app.config["DU_ABI"])
-        address = Web3.toChecksumAddress(current_app.config["DU_ADDRESS"])
-        self.contract = provider.eth.contract(address=address, abi=abi)
-        if provider.isConnected():
-            logger.info('dataunion provider is connected')
+    # def __init__(self, appbuilder):
+    #     """
+    #         SupersetSecurityManager contructor
+    #         param appbuilder:
+    #             Superset AppBuilder main object
+    #     """
+    #     super(SupersetSecurityManager, self).__init__(appbuilder)
+    #     provider = Web3(Web3.HTTPProvider(current_app.config["XDAI_JSON_RPC_URL"]))
+    #     abi = json.loads(current_app.config["DU_ABI"])
+    #     address = Web3.toChecksumAddress(current_app.config["DU_ADDRESS"])
+    #     self.contract = provider.eth.contract(address=address, abi=abi)
+    #     if provider.isConnected():
+    #         logger.info('dataunion provider is connected')
 
     def get_schema_perm(  # pylint: disable=no-self-use
         self, database: Union["Database", str], schema: Optional[str] = None
@@ -1311,23 +1311,25 @@ class SupersetSecurityManager(  # pylint: disable=too-many-public-methods
         """
         if username is None or username == "":
             return None
-        address = Web3.toChecksumAddress(username)
-        memberInfo = self.contract.functions.memberData(address).call()
-        logger.info(memberInfo)
-        if memberInfo is None:
-            return None
+        # address = Web3.toChecksumAddress(username)
+        # memberInfo = self.contract.functions.memberData(address).call()
+        # logger.info(memberInfo)
+        # if memberInfo is None:
+            # return None
         user = self.find_user(username=username)
-        if user is None:
-            user = self.add_user(
-            username=username,
-            first_name=username,
-            last_name="-",
-            email=username + "@email.notfound",
-            role=self.find_role("Gamma"), # TODO use contract roles
-        )
-        user.nonce = math.floor(random.random() * 1000000)
-        user.active = memberInfo[0] == 1
-        self.update_user(user)
-        if not user.is_active:
+        # if user is None:
+            # user = self.add_user(
+            # username=username,
+            # first_name=username,
+            # last_name="-",
+            # email=username + "@email.notfound",
+            # role=self.find_role("Gamma"), # TODO use contract roles
+        # )
+        if user is None or (not user.is_active):
             return None
+        user.nonce = math.floor(random.random() * 1000000)
+        # user.active = memberInfo[0] == 1
+        self.update_user(user)
+        # if not user.is_active:
+            # return None
         return user
