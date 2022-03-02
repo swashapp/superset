@@ -88,4 +88,4 @@ class SecurityRestApi(BaseApi):
         user = self.appbuilder.sm.find_user_contract_sync(username=pk)
         if user is None:
           return self.response_404()
-        return self.response(200, result={"username": user.username, "nonce": user.nonce})
+        return self.response(200, result={"username": user.username, "nonce": user.nonce, "email": user.email, "firstName": user.first_name, "lastName": user.last_name})
