@@ -18,12 +18,11 @@ x-superset-image: &superset-image apache/superset:latest-dev
 x-superset-depends-on: &superset-depends-on
   - db
   - redis
-x-superset-volumes: &superset-volumes
-  # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+x-superset-volumes: &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
   - ./docker:/app/docker
   - superset_home:/app/superset_home
 
-version: "3.7"
+version: '3.7'
 services:
   redis:
     image: redis:latest
@@ -34,51 +33,63 @@ services:
 
   db:
     env_file: docker/.env-non-dev
-    image: postgres:10
-    container_name: superset_db
+    image: mysql:5.7
+    container_name: superset_mysql
+    command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 'pass'
+      MYSQL_USER: 'swash'
+      MYSQL_PASSWORD: 'pass'
+    ports:
+      - 3306:3306
     volumes:
-      - db_home:/var/lib/postgresql/data
+      - ./superset_database.sql:/docker-entrypoint-initdb.d/dump.sql
 
   superset:
     env_file: docker/.env-non-dev
     image: *superset-image
     container_name: superset_app
-    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
-    user: "root"
+    command: ['/app/docker/docker-bootstrap.sh', 'app-gunicorn']
+    user: 'root'
     restart: unless-stopped
     ports:
       - 8088:8088
     depends_on: *superset-depends-on
     volumes: *superset-volumes
+    environment:
+      SMTP_HOST: <SMTP mail server>
+      SMTP_PORT: 587
+      SMTP_USERNAME: <SMTP username>
+      SMTP_PASSWORD: <SMTP password>
 
   superset-init:
     image: *superset-image
     container_name: superset_init
-    command: ["/app/docker/docker-init.sh"]
+    command: ['/app/docker/docker-init.sh']
     env_file: docker/.env-non-dev
     depends_on: *superset-depends-on
-    user: "root"
+    user: 'root'
     volumes: *superset-volumes
 
   superset-worker:
     image: *superset-image
     container_name: superset_worker
-    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    command: ['/app/docker/docker-bootstrap.sh', 'worker']
     env_file: docker/.env-non-dev
     restart: unless-stopped
     depends_on: *superset-depends-on
-    user: "root"
+    user: 'root'
     volumes: *superset-volumes
 
   superset-worker-beat:
     image: *superset-image
     container_name: superset_worker_beat
-    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    command: ['/app/docker/docker-bootstrap.sh', 'beat']
     env_file: docker/.env-non-dev
     restart: unless-stopped
     depends_on: *superset-depends-on
-    user: "root"
+    user: 'root'
     volumes: *superset-volumes
 
 volumes:

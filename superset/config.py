@@ -82,7 +82,7 @@ PACKAGE_JSON_FILE = os.path.join(BASE_DIR, "static", "assets", "package.json")
 #     "type": "image/png"
 #     "rel": "icon"
 # },
-FAVICONS = [{"href": "/static/assets/images/favicon.png"}]
+FAVICONS = [{"href": "/static/assets/images/favicon.ico"}]
 
 
 def _try_json_readversion(filepath: str) -> Optional[str]:
@@ -213,10 +213,10 @@ PROXY_FIX_CONFIG = {"x_for": 1, "x_proto": 1, "x_host": 1, "x_port": 1, "x_prefi
 # GLOBALS FOR APP Builder
 # ------------------------------
 # Uncomment to setup Your App name
-APP_NAME = "Superset"
+APP_NAME = "Swash"
 
 # Specify the App icon
-APP_ICON = "/static/assets/images/superset-logo-horiz.png"
+APP_ICON = "/static/assets/images/swash.png"
 APP_ICON_WIDTH = 126
 
 # Specify where clicking the logo would take the user
@@ -914,18 +914,19 @@ ENABLE_ACCESS_REQUEST = False
 
 # smtp server configuration
 EMAIL_NOTIFICATIONS = False  # all the emails are sent using dryrun
-SMTP_HOST = "smtp.mailgun.org"
+SMTP_HOST = os.environ.get("SMTP_HOST")
 SMTP_STARTTLS = True
 SMTP_SSL = False
-SMTP_USER = "postmaster@sandbox15b913a406a842b7a1d472653f844470.mailgun.org"
-SMTP_PORT = 587
-SMTP_PASSWORD = "79f69fb2cbade591522fb278435a7a2f-b2f5ed24-433253e6"
+SMTP_USER = os.environ.get("SMTP_USERNAME") 
+SMTP_PORT = os.environ.get("SMTP_PORT")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
 SMTP_MAIL_FROM = "support@swashapp.io"
 
-MAIL_SERVER = 'smtp.mailgun.org'
+MAIL_SERVER = os.environ.get("SMTP_HOST")
 MAIL_USE_TLS = True
-MAIL_USERNAME = 'postmaster@sandbox15b913a406a842b7a1d472653f844470.mailgun.org'
-MAIL_PASSWORD = '79f69fb2cbade591522fb278435a7a2f-b2f5ed24-433253e6'
+MAIL_PORT = os.environ.get("SMTP_PORT")
+MAIL_USERNAME = os.environ.get("SMTP_USERNAME") 
+MAIL_PASSWORD = os.environ.get("SMTP_PASSWORD")
 MAIL_DEFAULT_SENDER = 'support@swashapp.io'
 
 RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'

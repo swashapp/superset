@@ -19,40 +19,45 @@ x-superset-user: &superset-user root
 x-superset-depends-on: &superset-depends-on
   - db
   - redis
-x-superset-volumes: &superset-volumes
-  # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
+x-superset-volumes: &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
   - ./docker:/app/docker
   - ./superset:/app/superset
   - ./superset-frontend:/app/superset-frontend
   - superset_home:/app/superset_home
   - ./tests:/app/tests
 
-version: "3.7"
+version: '3.7'
 services:
   redis:
     image: redis:latest
     container_name: superset_cache
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6379:6379"
+      - '127.0.0.1:6379:6379'
     volumes:
       - redis:/data
 
   db:
     env_file: docker/.env
-    image: postgres:10
-    container_name: superset_db
-    restart: unless-stopped
+    image: mysql:5.7
+    container_name: superset_mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 'pass'
+      MYSQL_USER: 'swash'
+      MYSQL_PASSWORD: 'pass'
     ports:
-      - "127.0.0.1:5432:5432"
+      - 3306:3306
     volumes:
-      - db_home:/var/lib/postgresql/data
+      - ./superset_database.sql:/docker-entrypoint-initdb.d/dump.sql
+      - ./db:/var/lib/mysql
 
   superset:
     env_file: docker/.env
     image: *superset-image
     container_name: superset_app
-    command: ["/app/docker/docker-bootstrap.sh", "app"]
+    command: ['/app/docker/docker-bootstrap.sh', 'app']
     restart: unless-stopped
     ports:
       - 8088:8088
@@ -60,7 +65,11 @@ services:
     depends_on: *superset-depends-on
     volumes: *superset-volumes
     environment:
-      CYPRESS_CONFIG: "${CYPRESS_CONFIG}"
+      CYPRESS_CONFIG: '${CYPRESS_CONFIG}'
+      SMTP_HOST: <SMTP mail server>
+      SMTP_PORT: 587
+      SMTP_USERNAME: <SMTP username>
+      SMTP_PASSWORD: <SMTP password>
 
   superset-websocket:
     container_name: superset_websocket
@@ -93,18 +102,18 @@ services:
   superset-init:
     image: *superset-image
     container_name: superset_init
-    command: ["/app/docker/docker-init.sh"]
+    command: ['/app/docker/docker-init.sh']
     env_file: docker/.env
     depends_on: *superset-depends-on
     user: *superset-user
     volumes: *superset-volumes
     environment:
-      CYPRESS_CONFIG: "${CYPRESS_CONFIG}"
+      CYPRESS_CONFIG: '${CYPRESS_CONFIG}'
 
   superset-node:
     image: node:16
     container_name: superset_node
-    command: ["/app/docker/docker-frontend.sh"]
+    command: ['/app/docker/docker-frontend.sh']
     env_file: docker/.env
     depends_on: *superset-depends-on
     volumes: *superset-volumes
@@ -112,7 +121,7 @@ services:
   superset-worker:
     image: *superset-image
     container_name: superset_worker
-    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    command: ['/app/docker/docker-bootstrap.sh', 'worker']
     env_file: docker/.env
     restart: unless-stopped
     depends_on: *superset-depends-on
@@ -125,7 +134,7 @@ services:
   superset-worker-beat:
     image: *superset-image
     container_name: superset_worker_beat
-    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    command: ['/app/docker/docker-bootstrap.sh', 'beat']
     env_file: docker/.env
     restart: unless-stopped
     depends_on: *superset-depends-on
@@ -135,7 +144,7 @@ services:
   superset-tests-worker:
     image: *superset-image
     container_name: superset_tests_worker
-    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    command: ['/app/docker/docker-bootstrap.sh', 'worker']
     env_file: docker/.env
     environment:
       DATABASE_HOST: localhost
