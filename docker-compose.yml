@@ -164,3 +164,7 @@ volumes:
     external: false
   redis:
     external: false
+
+networks:
+  default:
+    name: swash_net
