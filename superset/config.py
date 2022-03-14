@@ -567,8 +567,24 @@ DATA_CACHE_CONFIG: CacheConfig = {"CACHE_TYPE": "null"}
 STORE_CACHE_KEYS_IN_METADATA_DB = False
 
 # CORS Options
-ENABLE_CORS = False
-CORS_OPTIONS: Dict[Any, Any] = {}
+ENABLE_CORS = True
+CORS_OPTIONS = { 
+    'supports_credentials': True, 
+    'send_wildcard': True,
+    'allow_headers': [ 
+        'X-CSRFToken', 'Content-Type', 'Origin', 'X-Requested-With', 'Accept', 
+    ], 
+    'resources': [ 
+         '/superset/csrf_token/',  # auth 
+         '/api/v1/formData/',  # sliceId => formData 
+         '/superset/explore_json/*',  # legacy query API, formData => queryData 
+         '/api/v1/query/',  # new query API, queryContext => queryData 
+         '/superset/fetch_datasource_metadata/',  # datasource metadata 
+         '/register/*'
+ 
+    ], 
+    'origins': ['http://sint.swashapp.io:3003', 'http://sint.swashapp.io:8088'], 
+}
 
 # Chrome allows up to 6 open connections per domain at a time. When there are more
 # than 6 slices in dashboard, a lot of time fetch requests are queued up and wait for
