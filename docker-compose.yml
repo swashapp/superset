@@ -39,19 +39,13 @@ services:
 
   db:
     env_file: docker/.env
-    image: mysql:5.7
-    container_name: superset_mysql
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 'pass'
-      MYSQL_USER: 'swash'
-      MYSQL_PASSWORD: 'pass'
+    image: postgres:10
+    container_name: superset_db
+    restart: unless-stopped
     ports:
-      - 3306:3306
+      - "127.0.0.1:5432:5432"
     volumes:
-      - ./superset_database.sql:/docker-entrypoint-initdb.d/dump.sql
-      - ./db:/var/lib/mysql
+      - db_home:/var/lib/postgresql/data
 
   superset:
     env_file: docker/.env

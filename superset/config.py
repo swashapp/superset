@@ -274,7 +274,7 @@ AUTH_TYPE = AUTH_DB
 AUTH_USER_REGISTRATION = True
 
 # The default user self registration role
-AUTH_USER_REGISTRATION_ROLE = "Gamma"
+AUTH_USER_REGISTRATION_ROLE = "Public"
 
 # When using LDAP Auth, setup the LDAP server
 # AUTH_LDAP_SERVER = "ldap://ldapserver.new"
@@ -571,19 +571,9 @@ ENABLE_CORS = True
 CORS_OPTIONS = { 
     'supports_credentials': True, 
     'send_wildcard': True,
-    'allow_headers': [ 
-        'X-CSRFToken', 'Content-Type', 'Origin', 'X-Requested-With', 'Accept', 
-    ], 
-    'resources': [ 
-         '/superset/csrf_token/',  # auth 
-         '/api/v1/formData/',  # sliceId => formData 
-         '/superset/explore_json/*',  # legacy query API, formData => queryData 
-         '/api/v1/query/',  # new query API, queryContext => queryData 
-         '/superset/fetch_datasource_metadata/',  # datasource metadata 
-         '/register/*'
- 
-    ], 
-    'origins': ['http://sint.swashapp.io:3003', 'http://sint.swashapp.io:8088'], 
+    'allow_headers': '*', 
+    'resources': '*', 
+    'origins': ['http://sint.swashapp.io:3003', 'http://sint.swashapp.io:8088'],
 }
 
 # Chrome allows up to 6 open connections per domain at a time. When there are more
